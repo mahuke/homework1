@@ -14,14 +14,67 @@ public:
 	virtual int Top() = 0;
 };
 
-class ListedStack : public AbstractStack {
-	int size = 0;
+template<class T> class ListedStack : public AbstractStack {
+	int size;
 	struct element {
 		element* befor;
-		int val;
+		T val;
 	};
-	element* top = nullptr;
+	element* top;
 public:
+	ListedStack() {
+		size = 1;
+		top = new element;
+	}
+	ListedStack(ListedStack& other) {
+		ListedStack y;
+		for (int i = 0; i < other.size; i++) {
+			y.Push(other.Top());
+			other.Pop();
+		}
+		for (int i = 0; i < other.size; i++) {
+			Push(y.Top());
+			y.Pop();
+		}
+	}
+	ListedStack& operator=(ListedStack& other) {
+		if (this == &other)
+			return *this;
+		element* d;
+		while (!(top == nullptr)) {
+			d = top;
+			top = top->befor;
+			delete[] d;
+		}
+		ListedStack y;
+		for (int i = 0; i < other.size; i++) {
+			y.Push(other.Top());
+			other.Pop();
+		}
+		for (int i = 0; i < other.size; i++) {
+			Push(y.Top());
+			y.Pop();
+		}
+	}
+	ListedStack& operator=(ListedStack&& poop) {
+		if (this == &poop) return *this;
+		element* d;
+		while (!(top == nullptr)) {
+			d = top;
+			top = top->befor;
+			delete[] d;
+		}
+		top = poop.top;
+		poop.top = nullptr;
+		size = poop.size;
+		poop.size = 0;
+	}
+	ListedStack(ListedStack&& poop) {
+		top = poop.top;
+		size = poop.size;
+		poop.top = nullptr;
+		poop.size = 0;
+	}
 	bool IsEmpty() {
 		if (size == 0)
 			return 1;
@@ -30,7 +83,7 @@ public:
 	int Size() {
 		return size;
 	}
-	void Push(int val) {
+	void Push(T val) {
 		++size;
 		element* a = new element;
 		a->val = val;
@@ -46,14 +99,14 @@ public:
 		top = top->befor;
 		delete[] f;
 	}
-	int Top() {
+	T Top() {
 		if (size == 0)
 			return 0;
 		return top->val;
 	}
 	~ListedStack() {
-		for (; top != nullptr;) {
-			element* d;
+		element* d;
+		while (size != 0 && top !=nullptr) {
 			d = top;
 			top = top->befor;
 			delete[] d;
@@ -61,11 +114,54 @@ public:
 	}
 };
 
-class LimitedStack : public AbstractStack {
+template<class T> class LimitedStack : public AbstractStack {
 	int limit = 0;
 	int size = 0;
-	int* stack = nullptr;
+	T* stack = nullptr;
 public:
+	LimitedStack() : AbstractStack() {
+		limit = 5;
+		size = 0;
+		stack = nullptr;
+	}
+	LimitedStack(LimitedStack& poop) {
+		stack = new T[poop.size];
+		for (int i = 0; i < poop.size; i++) {
+			stack[i] = poop.stack[i];
+			size = poop.size;
+		}
+	}
+	LimitedStack& operator=(LimitedStack& maybepoop) {
+		if (this == &maybepoop) {
+			return *this;
+		}
+		delete[] stack;
+		stack = new T[maybepoop.size];
+		for (int i = 0; i < maybepoop.size; i++) {
+			stack[i] = maybepoop.stack[i];
+		}
+		size = maybepoop.size;
+	}
+	~LimitedStack() {
+		delete[] stack;
+		size = 0;
+	}
+	LimitedStack& operator=(LimitedStack&& surlypoop) {
+		if (this == &surlypoop) {
+			return *this;
+		}
+		delete[] stack;
+		stack = surlypoop.stack;
+		size = surlypoop.size;
+		surlypoop.size = 0;
+		surlypoop.stack = nullptr;
+	}
+	LimitedStack(LimitedStack&& poop) {
+		size = poop.size;
+		stack = poop.stack;
+		poop.size = 0;
+		poop.stack = nullptr;
+	}
 	LimitedStack(int a) {
 		limit = a;
 	}
@@ -77,11 +173,11 @@ public:
 	int Size() {
 		return size;
 	}
-	void Push(int a) {
+	void Push(T a) {
 		if (size == limit)
 			return;
 		size+=1;	
-		int* _new = new int[size];
+		T* _new = new T[size];
 		for (int i = 1; i < size; i++) {
 			_new[i] = stack[i - 1];
 		}
@@ -94,7 +190,7 @@ public:
 		if (size == 0)
 			return;
 		size -= 1;
-		int* _new = new int[size];
+		T* _new = new T[size];
 		for (int i = 0; i < size; i++) {
 			_new[i] = stack[i + 1];
 		}
@@ -102,16 +198,57 @@ public:
 		stack = _new;
 		return;
 	}
-	int Top() {
+	T Top() {
 		if (size == 0)
 			return 0;
 		return stack[0];
 	}
 };
-class UnlimitedStack : public AbstractStack {
-	int size = 0;
-	int* stack = nullptr;
+template<class T> class UnlimitedStack : public AbstractStack {
+	int size;
+	T* stack;
 public:
+	UnlimitedStack() : AbstractStack() {
+		size = 0;
+		stack = nullptr;
+	}
+	UnlimitedStack(UnlimitedStack& poop) {
+		stack = new T[poop.size];
+		for (int i = 0; i < poop.size; i++) {
+			stack[i] = poop.stack[i];
+			size = poop.size;
+		}
+	}
+	UnlimitedStack& operator=(UnlimitedStack& maybepoop) {
+		if (this == &maybepoop) {
+			return *this;
+		}
+		delete[] stack;
+		stack = new T[maybepoop.size];
+		for (int i = 0; i < maybepoop.size; i++) {
+			stack[i] = maybepoop.stack[i];
+		}
+		size = maybepoop.size;
+	}
+	~UnlimitedStack() {
+		delete[] stack;
+		size = 0;
+	}
+	UnlimitedStack& operator=(UnlimitedStack&& surlypoop) {
+		if (this == &surlypoop) {
+			return *this;
+		}
+		delete[] stack;
+		stack = surlypoop.stack;
+		size = surlypoop.size;
+		surlypoop.stack = nullptr;
+	}
+	UnlimitedStack(UnlimitedStack&& poop) {
+		size = poop.size;
+		stack = poop.stack;
+		poop.size = 0;
+		poop.stack = nullptr;
+	}
 	bool IsEmpty() {
 		if (size == 0)
 			return 1;
@@ -122,7 +259,7 @@ public:
 	}
 	void Push(int a) { 
 		size += 1;
-		int* _new = new int[size];
+		T* _new = new T[size];
 		for (int i = 1; i < size; i++) {
 			_new[i] = stack[i - 1];
 		}
@@ -135,7 +272,7 @@ public:
 		if (size == 0)
 			return;
 		size -= 1;
-		int* _new = new int[size];
+		T* _new = new T[size];
 		for (int i = 0; i < size; i++) {
 			_new[i] = stack[i + 1];
 		}
@@ -143,7 +280,7 @@ public:
 		stack = _new;
 		return;
 	}
-	int Top() {
+	T Top() {
 		if (size == 0)
 			return 0;
 		return stack[0];
@@ -152,7 +289,7 @@ public:
 int main()
 {
 	
-	LimitedStack st(5);
+	LimitedStack<int> st(5);
 	for (int i = 1; i <= 7; i++) {
 		st.Push(i);
 	}
@@ -163,7 +300,7 @@ int main()
 	cout << st.IsEmpty() << "||||||" << st.Size();
 	cout << endl;
 	
-	UnlimitedStack unst;
+	UnlimitedStack<int> unst;
 	for (int i = 0; i < 10; i++) {
 		unst.Push(i);
 		cout << unst.Top() << endl;
@@ -174,7 +311,7 @@ int main()
 	cout << unst.IsEmpty() << "||||||||" << unst.Size();
 	cout << endl;
 
-	ListedStack lst;
+	ListedStack<int> lst;
 	for (int i = 0; i < 10; i++) {
 		lst.Push(i);
 		cout << lst.Top() << endl;
